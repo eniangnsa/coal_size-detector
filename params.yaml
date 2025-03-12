@@ -1,0 +1,6 @@
+data:
+  data_dir: "C:/Users/SCII1/Desktop/coal_size detector/data"
+  normal_coal_dir: "normal coal flow"
+  image_dir: "images/train"
+  labels_dir: "labels/train"
+  output_dir: "data/processed"
