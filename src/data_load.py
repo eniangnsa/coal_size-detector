@@ -13,8 +13,8 @@ def load_data(params):
     """
     Load the image data from the specified directories
     """
-    source_dir = Path(params["data"]["data_dir"])
-    images_dir = source_dir / params["data"]["normal_coal_dir"]
+    source_dir = Path(params["data"]["source_dir"])
+    images_dir = source_dir / params["data"]["images_dir"]
     labels_dir = source_dir / params["data"]["labels_dir"]
 
     # ensure that the files exist in the directories
