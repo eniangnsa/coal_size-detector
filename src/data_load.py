@@ -22,8 +22,20 @@ def load_data(params):
         raise FileNotFoundError(f"the images or labels were not found{images_dir}, {labels_dir}")
     
     # get a list of the images and labels
-    image_files = sorted(list(images_dir.glob("*.jpg*")))
+    image_files = sorted(list(images_dir.glob("*.jpg")))
     label_files = sorted(list(labels_dir.glob("*.*")))
+
+    # add to normal annotations to the label files
+    normal_path = source_dir / params['data']['normal_coal_dir']
+    normal_names = sorted(normal_path.glob("*.jpg"))
+    normal_labels = []
+    for label_path in normal_names:
+        # get the filename without the extension
+        stem = label_path.stem
+        txt_filename = stem + ".txt"
+        normal_labels.append(txt_filename)
+
+    label_files.extend(normal_labels)
 
     # Verify that the number of images and labels match
     if len(image_files) != len(label_files):

@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
@@ -42,12 +43,29 @@ def augment_data(params):
     augmented_dir.mkdir(parents=True, exist_ok=True)
     
     for idx, (image_path, label_path) in enumerate(zip(image_files, label_files)):
+        # Print the file path for debugging
+        print(f"Reading image: {image_path}")
+        
+        # Handle non-ASCII characters in the file path
+        try:
+            # Encode and decode the file path to handle non-ASCII characters
+            image_path_encoded = os.fsencode(str(image_path))
+            image_path_decoded = os.fsdecode(image_path_encoded)
+        except UnicodeEncodeError:
+            print(f"Skipping file due to encoding issues: {image_path}")
+            continue
+        
         # Load image
-        image = cv2.imread(str(image_path))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        image = cv2.imread(image_path_decoded)
+        if image is None:
+            print(f"Error: Unable to read image at {image_path_decoded}")
+            continue  # Skip this image and move to the next one
+        
+        # Convert to RGB
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         # Load bounding boxes
-        with open(label_path, 'r') as file:
+        with open(label_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
         boxes = np.array([list(map(float, line.strip().split())) for line in lines])
         
@@ -60,7 +78,7 @@ def augment_data(params):
         
         # Save augmented labels
         output_label_path = augmented_dir / f"aug_{idx}.txt"
-        with open(output_label_path, 'w') as file:
+        with open(output_label_path, 'w', encoding='utf-8') as file:
             for box in augmented_boxes:
                 file.write(f"{int(box[0])} {box[1]:.6f} {box[2]:.6f} {box[3]:.6f} {box[4]:.6f}\n")
         
