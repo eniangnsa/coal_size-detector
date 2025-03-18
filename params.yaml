@@ -5,6 +5,7 @@ data:
   processed_dir: 'processed'  # Directory to save processed data
   augmented_dir: 'augmented'  # Directory to save augmented data
   normal_coal_dir: "normal coal flow"
+  large_coal_dir: "large pieces"
 preprocessing:
   resize: [640, 640]               # Resize images to this size (YOLOv8 default)
 
