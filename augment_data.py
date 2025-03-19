@@ -1,95 +1,147 @@
-import os
-import tensorflow as tf
+import cv2
+import albumentations as A
 import numpy as np
 from pathlib import Path
-from src.data_load import load_params, load_data
-import cv2
 
-def augment_image(image, boxes, params):
-    """Apply augmentation to an image and its bounding boxes."""
-    # Convert image to TensorFlow tensor
-    image = tf.convert_to_tensor(image, dtype=tf.float32)
-    
-    # Apply random hue, saturation, and value adjustments
-    image = tf.image.random_hue(image, params['augmentation']['hsv_h'])
-    image = tf.image.random_saturation(image, lower=1 - params['augmentation']['hsv_s'], upper=1 + params['augmentation']['hsv_s'])
-    image = tf.image.random_brightness(image, max_delta=params['augmentation']['hsv_v'])
-    
-    # Apply random horizontal flip
-    if np.random.rand() < params['augmentation']['flip']:
-        image = tf.image.flip_left_right(image)
-        boxes[:, 1] = 1.0 - boxes[:, 1]  # Flip x_center for YOLO format
-    
-    # Apply random translation and scaling
-    translate_x = params['augmentation']['translate'] * np.random.uniform(-1, 1)
-    translate_y = params['augmentation']['translate'] * np.random.uniform(-1, 1)
-    scale = 1.0 + params['augmentation']['scale'] * np.random.uniform(-1, 1)
-    
-    # Apply transformations to boxes
-    boxes[:, 1] = (boxes[:, 1] + translate_x) * scale  # x_center
-    boxes[:, 2] = (boxes[:, 2] + translate_y) * scale  # y_center
-    boxes[:, 3] *= scale  # width
-    boxes[:, 4] *= scale  # height
-    
-    # Clip boxes to [0, 1] range
-    boxes = np.clip(boxes, 0, 1)
-    
-    return image.numpy().astype(np.uint8), boxes
+def read_yolo_label(label_path, image_width, image_height):
+    """
+    Read a YOLO format label file and convert bounding boxes to Albumentations format.
+    YOLO format: [class_id, x_center, y_center, width, height] (normalized)
+    Albumentations format: [x_min, y_min, x_max, y_max] (unnormalized)
+    """
+    if not label_path.exists():
+        raise FileNotFoundError(f"Label file not found at {label_path}. Check the file path.")
 
-def augment_data(params):
-    """Augment images and labels."""
-    image_files, label_files = load_data(params)
-    augmented_dir = Path(params['data']['augmented_dir'])
-    augmented_dir.mkdir(parents=True, exist_ok=True)
+    with open(label_path, 'r') as file:
+        lines = file.readlines()
     
-    for idx, (image_path, label_path) in enumerate(zip(image_files, label_files)):
-        # Print the file path for debugging
-        print(f"Reading image: {image_path}")
+    boxes = []
+    class_ids = []
+    for line in lines:
+        class_id, x_center, y_center, width, height = map(float, line.strip().split())
         
-        # Handle non-ASCII characters in the file path
-        try:
-            # Encode and decode the file path to handle non-ASCII characters
-            image_path_encoded = os.fsencode(str(image_path))
-            image_path_decoded = os.fsdecode(image_path_encoded)
-        except UnicodeEncodeError:
-            print(f"Skipping file due to encoding issues: {image_path}")
-            continue
+        # Convert YOLO format to Albumentations format
+        x_min = (x_center - width / 2) * image_width
+        y_min = (y_center - height / 2) * image_height
+        x_max = (x_center + width / 2) * image_width
+        y_max = (y_center + height / 2) * image_height
         
-        # Load image
-        image = cv2.imread(image_path_decoded)
-        if image is None:
-            print(f"Error: Unable to read image at {image_path_decoded}")
-            continue  # Skip this image and move to the next one
-        
-        # Convert to RGB
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        # Load bounding boxes
-        with open(label_path, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-        boxes = np.array([list(map(float, line.strip().split())) for line in lines])
-        
-        # Apply augmentation
-        augmented_image, augmented_boxes = augment_image(image, boxes, params)
-        
-        # Save augmented image
-        output_image_path = augmented_dir / f"aug_{idx}.jpg"
-        cv2.imwrite(str(output_image_path), cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR))
-        
-        # Save augmented labels
-        output_label_path = augmented_dir / f"aug_{idx}.txt"
-        with open(output_label_path, 'w', encoding='utf-8') as file:
-            for box in augmented_boxes:
-                file.write(f"{int(box[0])} {box[1]:.6f} {box[2]:.6f} {box[3]:.6f} {box[4]:.6f}\n")
-        
-        print(f"Saved augmented data: {output_image_path}, {output_label_path}")
+        boxes.append([x_min, y_min, x_max, y_max])
+        class_ids.append(class_id)
+    
+    return boxes, class_ids
+
+def write_yolo_label(label_path, boxes, class_ids, image_width, image_height):
+    """
+    Convert bounding boxes back to YOLO format and save to a label file.
+    """
+    with open(label_path, 'w') as file:
+        for box, class_id in zip(boxes, class_ids):
+            x_min, y_min, x_max, y_max = box
+            
+            # Convert Albumentations format to YOLO format
+            x_center = ((x_min + x_max) / 2) / image_width
+            y_center = ((y_min + y_max) / 2) / image_height
+            width = (x_max - x_min) / image_width
+            height = (y_max - y_min) / image_height
+            
+            file.write(f"{int(class_id)} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
+
+def apply_augmentation(image, boxes, class_ids, augmentation_pipeline):
+    """
+    Apply augmentations to the image and bounding boxes.
+    """
+    transformed = augmentation_pipeline(image=image, bboxes=boxes, class_labels=class_ids)
+    transformed_image = transformed['image']
+    transformed_boxes = transformed['bboxes']
+    transformed_class_ids = transformed['class_labels']
+    
+    return transformed_image, transformed_boxes, transformed_class_ids
 
 def main():
-    # Load parameters
-    params = load_params()
-    
-    # Augment data
-    augment_data(params)
+    # Define individual augmentation pipelines
+    augmentations = [
+        A.Compose([
+            A.Resize(640, 640),  # Resize to YOLOv8 input size
+            A.HorizontalFlip(p=1.0),  # Always apply horizontal flip
+        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels'])),
+        
+        A.Compose([
+            A.Resize(640, 640),
+            A.Rotate(limit=15, p=1.0),  # Always apply rotation
+        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels'])),
+        
+        A.Compose([
+            A.Resize(640, 640),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=1.0),  # Always adjust brightness/contrast
+        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels'])),
+        
+        A.Compose([
+            A.Resize(640, 640),
+            A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=1.0),  # Always adjust hue/saturation
+        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels'])),
+        
+        A.Compose([
+            A.Resize(640, 640),
+            A.GaussNoise(var_limit=(10, 50), p=1.0),  # Always add Gaussian noise
+        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels'])),
+    ]
+
+    # Define source and destination directories
+    source_images_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/large_dest").resolve()
+    source_labels_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/annotated_labels_dest").resolve()
+    augmented_images_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_image").resolve()
+    augmented_labels_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_label").resolve()
+
+    # Create augmented directories if they don't exist
+    augmented_images_dir.mkdir(parents=True, exist_ok=True)
+    augmented_labels_dir.mkdir(parents=True, exist_ok=True)
+
+    # Get all image and label files
+    image_files = sorted(source_images_dir.glob("*.jpg"))
+    label_files = sorted(source_labels_dir.glob("*.txt"))
+
+    # Ensure the number of images and labels match
+    if len(image_files) != len(label_files):
+        raise ValueError(f"Mismatch between number of images ({len(image_files)}) and labels ({len(label_files)})")
+
+    # Process each image and label pair
+    for idx, (image_path, label_path) in enumerate(zip(image_files, label_files)):
+        # Debug: Print the paths
+        print(f"Processing image: {image_path}")
+        print(f"Processing label: {label_path}")
+
+        # Load the image
+        image = cv2.imread(str(image_path))
+        if image is None:
+            print(f"Warning: Unable to read image at {image_path}. Skipping...")
+            continue
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        image_height, image_width, _ = image.shape
+
+        # Load and convert bounding boxes
+        boxes, class_ids = read_yolo_label(label_path, image_width, image_height)
+
+        # Apply each augmentation independently
+        for aug_idx, augmentation_pipeline in enumerate(augmentations):
+            # Apply augmentation
+            augmented_image, augmented_boxes, augmented_class_ids = apply_augmentation(image, boxes, class_ids, augmentation_pipeline)
+
+            # Save the augmented image and labels
+            output_image_path = augmented_images_dir / f"aug_{idx + 1:03d}_{aug_idx + 1:03d}.jpg"
+            output_label_path = augmented_labels_dir / f"aug_{idx + 1:03d}_{aug_idx + 1:03d}.txt"
+
+            # Ensure the augmented image is a NumPy array
+            if not isinstance(augmented_image, np.ndarray):
+                print(f"Warning: Augmented image is not a NumPy array. Skipping {image_path}...")
+                continue
+
+            # Save the augmented image
+            cv2.imwrite(str(output_image_path), cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR))
+            write_yolo_label(output_label_path, augmented_boxes, augmented_class_ids, image_width, image_height)
+
+            print(f"Augmented image saved to: {output_image_path}")
+            print(f"Augmented label saved to: {output_label_path}")
 
 if __name__ == "__main__":
     main()

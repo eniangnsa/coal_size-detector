@@ -1,115 +1,144 @@
-import argparse
 import yaml
-from typing import Text
-import os
 from pathlib import Path
+import shutil
 
 def load_params(config_path="params.yaml"):
+    """Load parameters from the YAML file."""
     with open(config_path, 'r') as file:
         params = yaml.safe_load(file)
     return params
 
-def load_data(params):
+def rename_files(source_path, destination_path, prefix="normal_size"):
     """
-    Load the image data from the specified directories
+    Renames all .jpg and .txt files in the specified directory and saves them in the destination directory.
+
+    Args:
+        source_path (str): Path to the directory containing the files to rename.
+        destination_path (str): Path to the directory where renamed files will be saved.
+        prefix (str): Prefix for the new file names. Default is "normal_size".
+
+    Returns:
+        tuple: A tuple containing two lists: (renamed_images, renamed_labels).
     """
-    source_dir = Path(params["data"]["source_dir"])
-    images_dir = source_dir / params["data"]["images_dir"]
-    labels_dir = source_dir / params["data"]["labels_dir"]
+    source_path = Path(source_path)
+    destination_path = Path(destination_path)
 
-    # Ensure that the files exist in the directories
-    if not images_dir.exists() or not labels_dir.exists():
-        raise FileNotFoundError(f"The images or labels were not found: {images_dir}, {labels_dir}")
-    
-    # Get a list of the images and labels
-    image_files = sorted(list(images_dir.glob("*.jpg")))
-    label_files = sorted(list(labels_dir.glob("*.txt")))
+    # Create the destination directory if it doesn't exist
+    destination_path.mkdir(parents=True, exist_ok=True)
 
-    # Add normal annotations to the label files
-    normal_path = source_dir / params['data']['normal_coal_dir']
-    normal_names = sorted(normal_path.glob("*.jpg"))
-    normal_labels = []
-    for label_path in normal_names:
-        # Get the filename without the extension
-        stem = label_path.stem
-        txt_filename = stem + ".txt"
-        normal_labels.append(txt_filename)
+    # Initialize lists to store new names
+    renamed_images = []
+    renamed_labels = []
 
-    label_files.extend(normal_labels)
+    # Process .jpg files (images)
+    all_image_files = sorted(source_path.glob("*.jpg"))
+    for idx, file in enumerate(all_image_files):
+        new_name = f"{prefix}_{idx + 1:03d}.jpg"
+        new_file_path = destination_path / new_name
 
-    # Verify that the number of images and labels match
-    if len(image_files) != len(label_files):
-        raise ValueError(
-            f"Mismatch in the number of images ({len(image_files)}) and labels ({len(label_files)})"
-        )
-    return image_files, label_files
+        # Copy the file to the destination directory
+        shutil.copy(file, new_file_path)
 
-def rename_files(image_dir, label_dir, output_image_dir, output_label_dir, prefix="normal_size"):
+        # Append the new name to the list
+        renamed_images.append(new_name)
+
+    # Process .txt files (labels)
+    all_text_files = sorted(source_path.glob("*.txt"))
+    for idx, file in enumerate(all_text_files):
+        new_name = f"{prefix}_{idx + 1:03d}.txt"
+        new_file_path = destination_path / new_name
+
+        # Copy the file to the destination directory
+        shutil.copy(file, new_file_path)
+
+        # Append the new name to the list
+        renamed_labels.append(new_name)
+
+    return renamed_images, renamed_labels
+
+def create_empty_labels(image_dir, label_dir):
     """
-    Rename image and label files to have English names.
+    Create empty .txt label files for all images in the specified directory.
     
     Args:
-        image_dir (str): Path to the directory containing the original images.
-        label_dir (str): Path to the directory containing the original labels.
-        output_image_dir (str): Path to save the renamed images.
-        output_label_dir (str): Path to save the renamed labels.
-        prefix (str): Prefix for the new filenames (e.g., "normal_size").
+        image_dir (str or Path): Directory containing the images.
+        label_dir (str or Path): Directory to save the empty label files.
     """
-    # Convert paths to Path objects
     image_dir = Path(image_dir)
     label_dir = Path(label_dir)
-    output_image_dir = Path(output_image_dir)
-    output_label_dir = Path(output_label_dir)
+
+    # Create the destination directory if it doesn't exist
+    label_dir.mkdir(parents=True, exist_ok=True)
+
+    # Get all image files in the image directory
+    all_images = sorted(image_dir.glob("*.jpg"))
+
+    # Create empty .txt files for each image
+    for image in all_images:
+        # Get the stem of the image file (filename without extension)
+        stem = image.stem
+
+        # Create the corresponding .txt file name
+        new_label = f"{stem}.txt"
+        new_label_path = label_dir / new_label
+
+        # Create an empty .txt file
+        with open(new_label_path, 'w') as f:
+            pass  # Create an empty file
+
+        print(f"Created empty label file: {new_label_path}")
+
+    print("All empty label files created successfully!")
+
+def load_data(params):
+    """Load data from the specified directories and rename files."""
+    source_dir = Path(params['data']['source_dir'])
+    normal_coal_dir = source_dir / params['data']['normal_coal_dir']
+    large_coal_dir = source_dir / params['data']['large_coal_dir']
+    labels_dir = source_dir / params['data']['labels_dir']
+
+    # Ensure that the directories exist
+    if not normal_coal_dir.exists() or not large_coal_dir.exists() or not labels_dir.exists():
+        raise FileNotFoundError(f"Charly, that thing no dey there. the images and labels no dey here: {labels_dir}, {normal_coal_dir}, {large_coal_dir}")
     
-    # Create output directories if they don't exist
-    output_image_dir.mkdir(parents=True, exist_ok=True)
-    output_label_dir.mkdir(parents=True, exist_ok=True)
+    # Check if the images and the labels have the same number of records
+    normal_images = sorted(list(normal_coal_dir.glob("*.jpg")))
+    large_images = sorted(list(large_coal_dir.glob("*.jpg")))
+    annotated_labels = sorted(list(labels_dir.glob("*.txt")))
+
+    if len(normal_images) != len(annotated_labels):
+        raise ValueError(f"Chairman, matter dey ground. the normal images: {len(normal_images)} size no match the labels: {len(annotated_labels)}")
     
-    # Get list of image and label files
-    image_files = sorted(list(image_dir.glob("*.jpg")))
-    label_files = sorted(list(label_dir.glob("*.txt")))
-    
-    # Ensure the number of images and labels match
-    if len(image_files) != len(label_files):
-        raise ValueError(f"The number of images and labels does not match.  image files: {len(image_files)} and label files: {len(label_files)}")
-    
-    # Rename files
-    for idx, (image_path, label_path) in enumerate(zip(image_files, label_files)):
-        # Generate new filenames
-        new_image_name = f"{prefix}_{idx + 1:03d}.jpg"
-        new_label_name = f"{prefix}_{idx + 1:03d}.txt"
-        
-        # Define new paths
-        new_image_path = output_image_dir / new_image_name
-        new_label_path = output_label_dir / new_label_name
-        
-        # Rename (move) the files
-        image_path.rename(new_image_path)
-        label_path.rename(new_label_path)
-        
-        print(f"Renamed {image_path.name} -> {new_image_name}")
-        print(f"Renamed {label_path.name} -> {new_label_name}")
+    # Define the destinations to save the renamed files
+    normal_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_dest")
+    large_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/large_dest")
+    annotated_labels_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/annotated_labels_dest")
+
+    # Create directories if they don't exist
+    normal_dest.mkdir(parents=True, exist_ok=True)
+    large_dest.mkdir(parents=True, exist_ok=True)
+    annotated_labels_dest.mkdir(parents=True, exist_ok=True)
+
+    # Call the rename function and rename the files
+    renamed_normal_images, _ = rename_files(source_path=normal_coal_dir, destination_path=normal_dest)
+    renamed_large_images, _ = rename_files(source_path=large_coal_dir, destination_path=large_dest, prefix="large_size")
+    _, renamed_annotated_labels = rename_files(source_path=labels_dir, destination_path=annotated_labels_dest, prefix="large_size")
+
+    # Create empty label files for images in the normal_dest folder
+    normal_label_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_label_dest")
+    create_empty_labels(normal_dest, normal_label_dest)
+
+    return renamed_normal_images, renamed_large_images, renamed_annotated_labels
 
 def main():
-    # Load parameters
+    # Load the params
     params = load_params()
-    
-    # Load data
-    image_files, label_files = load_data(params)
-    
+
+    # Load the data
+    renamed_norm, renamed_large, renamed_annotated_label = load_data(params)
+
     # Print some information
-    print(f"Loaded {len(image_files)} images and {len(label_files)} labels.")
-    print(f"First image: {image_files[0]}")
-    print(f"First label: {label_files[0]}")
-    
-    # Rename files
-    source_dir = Path(params["data"]["source_dir"])
-    images_dir = source_dir / params["data"]["images_dir"]
-    labels_dir = source_dir / params["data"]["labels_dir"]
-    output_image_dir = source_dir / "images_renamed"
-    output_label_dir = source_dir / "labels_renamed"
-    
-    rename_files(images_dir, labels_dir, output_image_dir, output_label_dir, prefix="normal_size")
+    print(f"Loaded normal images: {len(renamed_norm)}, large coal: {len(renamed_large)}, and labels: {len(renamed_annotated_label)}")
 
 if __name__ == "__main__":
     main()

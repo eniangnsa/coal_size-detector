@@ -3,6 +3,8 @@ data:
   images_dir: 'images/train'             # Subdirectory containing images
   labels_dir: 'labels/train'             # Subdirectory containing labels
   processed_dir: 'processed'  # Directory to save processed data
+  processed_image: 'processed_image'
+  processed_labels: 'processed_labels'
   augmented_dir: 'augmented'  # Directory to save augmented data
   normal_coal_dir: "normal coal flow"
   large_coal_dir: "large pieces"
