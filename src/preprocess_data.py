@@ -10,6 +10,7 @@ def preprocess_data(params):
     image_files, label_files = load_data(params)
     processed_dir = Path(params['data']['processed_dir'])
     processed_dir.mkdir(parents=True, exist_ok=True)
+    
 
     target_size = tuple(params['preprocessing']['resize'])
 
@@ -22,11 +23,11 @@ def preprocess_data(params):
         preprocessed_image = preprocess_image(image, target_size)
 
         # save the processed image
-        output_image_path = processed_dir / f"processed_{idx}.jpg"
+        output_image_path = processed_dir /params['processed_image']/ f"processed_{idx}.jpg"
         cv2.imwrite(str(output_image_path), cv2.cvtColor(preprocessed_image, cv2.COLOR_RGB2BGR))
 
         # copy the label files
-        output_label_path = processed_dir / f"processed_{idx}.txt"
+        output_label_path = processed_dir /params['processed_labels'] /f"processed_{idx}.txt"
         with open(label_path, "r") as src, open(output_label_path, "w") as dest:
             dest.write(src.read())
 

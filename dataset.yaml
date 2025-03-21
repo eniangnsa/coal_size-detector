@@ -1,0 +1,9 @@
+# dataset.yaml
+train: C:/Users/SCII1/Desktop/coal_size detector/data/split_data/train/images
+val: C:/Users/SCII1/Desktop/coal_size detector/data/split_data/val/images
+
+# Number of classes
+nc: 2  # Update this based on your dataset (e.g., 2 for normal and large coal)
+
+# Class names
+names: ['normal', 'large']
