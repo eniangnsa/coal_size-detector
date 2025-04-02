@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 
-def train_yolov8n(data_yaml, epochs=50, imgsz=640, batch=16, name="yolov8n_train"):
+def train_yolov8n(data_yaml, epochs=100, imgsz=640, batch=32, name="yolov8n_train"):
     """
     Train a YOLOv8n model using the specified dataset.
 
@@ -12,7 +12,7 @@ def train_yolov8n(data_yaml, epochs=50, imgsz=640, batch=16, name="yolov8n_train
         name (str): Name of the training run. Default is "yolov8n_train".
     """
     # Load the YOLOv8n model
-    model = YOLO("yolov8n.pt")  # Load a pretrained YOLOv8n model
+    model = YOLO("D:/Users/eniang.eniang/Desktop/coal_size-detector/yolo11n.pt")  # Load a pretrained YOLOv8n model
 
     # Train the model
     results = model.train(
@@ -21,6 +21,7 @@ def train_yolov8n(data_yaml, epochs=50, imgsz=640, batch=16, name="yolov8n_train
         imgsz=imgsz,     # Image size
         batch=batch,     # Batch size
         name=name,       # Name of the training run
+        device=0
     )
 
     # Print training results
@@ -29,10 +30,10 @@ def train_yolov8n(data_yaml, epochs=50, imgsz=640, batch=16, name="yolov8n_train
 
 def main():
     # Define the path to the dataset YAML file
-    data_yaml = "C:/Users/SCII1/Desktop/coal_size detector/data/dataset.yaml"
+    data_yaml = "D:/Users/eniang.eniang/Desktop/coal_size-detector/dataset.yaml"
 
     # Train the YOLOv8n model
-    train_yolov8n(data_yaml, epochs=50, imgsz=640, batch=16, name="yolov8n_coal_detector")
+    train_yolov8n(data_yaml, epochs=100, imgsz=640, batch=64, name="yolov8n_coal_detector")
 
 if __name__ == "__main__":
     main()

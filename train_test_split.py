@@ -83,15 +83,15 @@ def split_data(consolidated_dir, output_dir, test_size=0.2, random_state=42):
 def main():
     # Define source directories
     source_dirs = [
-        (Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_dest"), Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_label_dest"), "original_normal"),
-        (Path("C:/Users/SCII1/Desktop/coal_size detector/data/large_dest"), Path("C:/Users/SCII1/Desktop/coal_size detector/data/annotated_labels_dest"), "original_large"),
-        (Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_norm_image"), Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_norm_label"), "augmented_normal"),
-        (Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_large_image"), Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_large_label"), "augmented_large"),
+        (Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_dest"), Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_label_dest"), "original_normal"),
+        (Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/large_dest"), Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/annotated_labels_dest"), "original_large"),
+        (Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_norm_image"), Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_norm_label"), "augmented_normal"),
+        (Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_large_image"), Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_large_label"), "augmented_large"),
     ]
 
     # Define consolidated and output directories
-    consolidated_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/consolidated_data")
-    output_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/split_data")
+    consolidated_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/consolidated_data")
+    output_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/split_data")
 
     # Consolidate data
     consolidate_data(source_dirs, consolidated_dir)

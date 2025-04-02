@@ -93,9 +93,9 @@ def create_empty_labels(image_dir, label_dir):
 def load_data(params):
     """Load data from the specified directories and rename files."""
     source_dir = Path(params['data']['source_dir'])
-    normal_coal_dir = source_dir / params['data']['normal_coal_dir']
-    large_coal_dir = source_dir / params['data']['large_coal_dir']
-    labels_dir = source_dir / params['data']['labels_dir']
+    normal_coal_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal coal flow")
+    large_coal_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/large pieces")
+    labels_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/labels/train")
 
     # Ensure that the directories exist
     if not normal_coal_dir.exists() or not large_coal_dir.exists() or not labels_dir.exists():
@@ -110,9 +110,9 @@ def load_data(params):
         raise ValueError(f"Chairman, matter dey ground. the normal images: {len(normal_images)} size no match the labels: {len(annotated_labels)}")
     
     # Define the destinations to save the renamed files
-    normal_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_dest")
-    large_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/large_dest")
-    annotated_labels_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/annotated_labels_dest")
+    normal_dest = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_dest")
+    large_dest = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/large_dest")
+    annotated_labels_dest = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/annotated_labels_dest")
 
     # Create directories if they don't exist
     normal_dest.mkdir(parents=True, exist_ok=True)
@@ -125,7 +125,7 @@ def load_data(params):
     _, renamed_annotated_labels = rename_files(source_path=labels_dir, destination_path=annotated_labels_dest, prefix="large_size")
 
     # Create empty label files for images in the normal_dest folder
-    normal_label_dest = Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_label_dest")
+    normal_label_dest = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_label_dest")
     create_empty_labels(normal_dest, normal_label_dest)
 
     return renamed_normal_images, renamed_large_images, renamed_annotated_labels

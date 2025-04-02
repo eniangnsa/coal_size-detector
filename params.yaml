@@ -1,5 +1,5 @@
 data:
-  source_dir: 'C:/Users/SCII1/Desktop/coal_size detector/data'          # Root directory containing raw images and labels
+  source_dir: '/d/Users/eniang.eniang/Desktop/coal_size-detector/data'          # Root directory containing raw images and labels
   images_dir: 'images/train'             # Subdirectory containing images
   labels_dir: 'labels/train'             # Subdirectory containing labels
   processed_dir: 'processed'  # Directory to save processed data
@@ -10,11 +10,3 @@ data:
   large_coal_dir: "large pieces"
 preprocessing:
   resize: [640, 640]               # Resize images to this size (YOLOv8 default)
-
-augmentation:
-  hsv_h: 0.015                     # Hue augmentation
-  hsv_s: 0.7                       # Saturation augmentation
-  hsv_v: 0.4                       # Value augmentation
-  flip: 0.5                        # Probability of horizontal flip
-  translate: 0.1                   # Translate augmentation (10% of image size)
-  scale: 0.5                       # Scale augmentation (50% of image size)

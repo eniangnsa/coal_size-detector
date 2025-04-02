@@ -97,7 +97,7 @@ def augment_data(source_images_dir, source_labels_dir, augmented_images_dir, aug
         
         A.Compose([
             A.Resize(640, 640),
-            A.GaussNoise(var_limit=(10, 50), p=1.0),  # Always add Gaussian noise
+            A.GaussNoise(var_limit=(10, 50), p=1.0, per_channel=False),  # Always add Gaussian noise
         ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels'])),
     ]
 
@@ -149,16 +149,16 @@ def augment_data(source_images_dir, source_labels_dir, augmented_images_dir, aug
 
 def main():
     # Define source and destination directories for large data
-    source_large_images_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/large_dest").resolve()
-    source_large_labels_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/annotated_labels_dest").resolve()
-    augmented_large_images_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_large_image").resolve()
-    augmented_large_labels_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_large_label").resolve()
+    source_large_images_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/large_dest").resolve()
+    source_large_labels_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/annotated_labels_dest").resolve()
+    augmented_large_images_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_large_image").resolve()
+    augmented_large_labels_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_large_label").resolve()
 
     # Define source and destination directories for normal data
-    source_norm_image_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_dest").resolve()
-    source_norm_label_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/normal_label_dest").resolve()
-    augmented_norm_image_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_norm_image").resolve()
-    augmented_norm_label_dir = Path("C:/Users/SCII1/Desktop/coal_size detector/data/augmented/augmented_norm_label").resolve()
+    source_norm_image_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_dest").resolve()
+    source_norm_label_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_label_dest").resolve()
+    augmented_norm_image_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_norm_image").resolve()
+    augmented_norm_label_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_norm_label").resolve()
 
     # Apply augmentations to large data
     print("Augmenting large data...")
