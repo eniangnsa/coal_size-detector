@@ -149,14 +149,14 @@ def augment_data(source_images_dir, source_labels_dir, augmented_images_dir, aug
 
 def main():
     # Define source and destination directories for large data
-    source_large_images_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/large_dest").resolve()
-    source_large_labels_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/annotated_labels_dest").resolve()
+    source_large_images_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/demo_test_large_image").resolve()
+    source_large_labels_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/demo_test_large_label").resolve()
     augmented_large_images_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_large_image").resolve()
     augmented_large_labels_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_large_label").resolve()
 
     # Define source and destination directories for normal data
-    source_norm_image_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_dest").resolve()
-    source_norm_label_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/normal_label_dest").resolve()
+    source_norm_image_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/demo_train_normal_image").resolve()
+    source_norm_label_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/demo_train_normal_image").resolve()
     augmented_norm_image_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_norm_image").resolve()
     augmented_norm_label_dir = Path("D:/Users/eniang.eniang/Desktop/coal_size-detector/data/augmented/augmented_norm_label").resolve()
 
